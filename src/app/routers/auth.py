@@ -1,6 +1,7 @@
 from fastapi import APIRouter, status, Body, Depends
 from sqlalchemy.orm import Session
 from datetime import timedelta
+from dotenv import load_dotenv
 import os
 
 from helpers.auth import create_access_token, verify_password
@@ -15,7 +16,7 @@ router = APIRouter(
     prefix="/api/auth",
     tags=["auth"]
 )
-
+load_dotenv()
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=Token)
 def login(email: str = Body(...), password: str = Body(...), db: Session = Depends(get_db)):
     user = User.get_user_by_email(email, db)
@@ -38,6 +39,7 @@ def login(email: str = Body(...), password: str = Body(...), db: Session = Depen
 def register(body: UserBase, db: Session = Depends(get_db)):
     user = User.create_user(body, db)
     access_token_expires = timedelta(minutes=int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES")))
+    
     access_token = create_access_token(
         data={
             "id": user.id,
